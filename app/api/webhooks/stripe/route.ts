@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import Stripe from 'stripe'
-import { stripe, getPlanFromPriceId, getCreditsForPlan } from '@/lib/stripe'
+import { getStripe, getPlanFromPriceId, getCreditsForPlan } from '@/lib/stripe'
 import { sendSubscriptionConfirmEmail, sendCancellationEmail } from '@/lib/resend'
 import { createClient } from '@supabase/supabase-js'
 
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!,
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         if (!userId) break
 
         const subscriptionId = session.subscription as string
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0]?.price?.id
         const plan = getPlanFromPriceId(priceId) ?? 'creator'
         const credits = getCreditsForPlan(plan)

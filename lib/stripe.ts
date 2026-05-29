@@ -1,11 +1,22 @@
 import Stripe from 'stripe'
 import { PLANS, type PlanId } from './plans'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  apiVersion: '2026-05-27.dahlia' as any,
-  typescript: true,
-})
+// Lazy singleton — instantiated on first call, not at module/build time.
+let _stripe: Stripe | null = null
+
+export function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not set')
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      apiVersion: '2026-05-27.dahlia' as any,
+      typescript: true,
+    })
+  }
+  return _stripe
+}
 
 /**
  * Create or retrieve a Stripe customer for the given user.
@@ -17,7 +28,7 @@ export async function getOrCreateCustomer(
 ): Promise<string> {
   if (existingStripeId) return existingStripeId
 
-  const customer = await stripe.customers.create({
+  const customer = await getStripe().customers.create({
     email,
     metadata: { supabase_user_id: userId },
   })
@@ -41,7 +52,7 @@ export async function createCheckoutSession({
   cancelUrl: string
   userId: string
 }): Promise<string> {
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
     payment_method_types: ['card'],
@@ -65,7 +76,7 @@ export async function createPortalSession(
   customerId: string,
   returnUrl: string,
 ): Promise<string> {
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await getStripe().billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
   })

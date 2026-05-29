@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import {
-  stripe,
+  getStripe,
   getOrCreateCustomer,
   createCheckoutSession,
 } from '@/lib/stripe'
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
   if (existingSub) {
     // User already has a subscription → update via portal
-    const portalSession = await stripe.billingPortal.sessions.create({
+    const portalSession = await getStripe().billingPortal.sessions.create({
       customer: customerId,
       return_url: `${appUrl}/settings`,
     })
