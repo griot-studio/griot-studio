@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import Link from 'next/link'
-import { PLANS } from '@/lib/credits'
+import { PLANS } from '@/lib/plans'
 
 const PLAN_DETAILS = [
   {

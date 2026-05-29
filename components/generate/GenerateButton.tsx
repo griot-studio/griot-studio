@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
-import { CREDIT_COSTS } from '@/lib/credits'
+import { CREDIT_COSTS } from '@/lib/plans'
 
 interface GenerateButtonProps {
   onClick: () => void

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { SettingsClient } from './SettingsClient'
-import type { PlanId } from '@/lib/credits'
+import type { PlanId } from '@/lib/plans'
 import type { CreditTransaction } from '@/types'
 
 export default async function SettingsPage({

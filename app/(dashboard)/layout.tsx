@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { Topbar } from '@/components/dashboard/Topbar'
-import type { PlanId } from '@/lib/credits'
+import type { PlanId } from '@/lib/plans'
 
 export default async function DashboardLayout({
   children,

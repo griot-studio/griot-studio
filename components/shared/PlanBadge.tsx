@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { PLANS, type PlanId } from '@/lib/credits'
+import { PLANS, type PlanId } from '@/lib/plans'
 
 interface PlanBadgeProps {
   plan: PlanId

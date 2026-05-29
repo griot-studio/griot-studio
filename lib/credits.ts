@@ -1,43 +1,15 @@
+// ── SERVER-ONLY ───────────────────────────────────────────────
+// This file imports next/headers via createClient — do NOT import
+// it from client components. Use lib/plans.ts for constants.
+
 import { createClient } from '@/lib/supabase/server'
 
-export const PLANS = {
-  free: {
-    name: 'Gratuit',
-    price: 0,
-    credits_per_month: 5,
-    features: ['5 images/mois', '3 styles', 'Watermark'],
-  },
-  creator: {
-    name: 'Créateur',
-    price: 29,
-    stripe_price_id: process.env.STRIPE_PRICE_CREATOR,
-    credits_per_month: 100,
-    features: ['100 images', '10 vidéos', 'Tous les styles', 'HD sans watermark'],
-  },
-  studio: {
-    name: 'Studio',
-    price: 79,
-    stripe_price_id: process.env.STRIPE_PRICE_STUDIO,
-    credits_per_month: -1,
-    features: ['Illimité', 'API access', 'Support dédié'],
-  },
-} as const
-
-export type PlanId = keyof typeof PLANS
-
-export const CREDIT_COSTS = {
-  image_standard: 1,  // 4 images 512×512
-  image_hd: 2,        // 4 images 1024×1024
-  video_short: 5,     // vidéo 5s
-  video_long: 10,     // vidéo 10s
-} as const
-
-export type CreditCostKey = keyof typeof CREDIT_COSTS
+// Re-export constants for server-only files that import from here
+export { PLANS, CREDIT_COSTS } from '@/lib/plans'
+export type { PlanId, CreditCostKey } from '@/lib/plans'
 
 /**
  * Check whether the authenticated user has enough credits.
- * Returns { ok: true, credits } or { ok: false, credits, required }.
- * Uses the service-role client to bypass RLS for the admin-side check.
  */
 export async function checkCredits(
   userId: string,
@@ -55,7 +27,6 @@ export async function checkCredits(
     return { ok: false, credits: 0, required }
   }
 
-  // Studio plan = unlimited
   if (data.plan === 'studio') {
     return { ok: true, credits: Infinity, required }
   }
@@ -69,7 +40,6 @@ export async function checkCredits(
 
 /**
  * Atomically debit credits and record the transaction.
- * Throws if the user doesn't have enough credits (race condition guard).
  */
 export async function debitCredits(
   userId: string,
@@ -79,36 +49,24 @@ export async function debitCredits(
 ): Promise<void> {
   const supabase = await createClient()
 
-  // Decrement with a check — won't go below 0
-  const { error: updateErr } = await supabase.rpc('debit_credits', {
-    p_user_id: userId,
-    p_amount: amount,
-  })
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('credits, plan')
+    .eq('id', userId)
+    .single()
 
-  // If the RPC doesn't exist yet, fall back to a direct update
-  if (updateErr?.code === 'PGRST202' || updateErr?.message?.includes('debit_credits')) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('credits, plan')
-      .eq('id', userId)
-      .single()
-
-    if (!profile) throw new Error('Profile not found')
-    if (profile.plan !== 'studio' && profile.credits < amount) {
-      throw new Error('Insufficient credits')
-    }
-
-    if (profile.plan !== 'studio') {
-      await supabase
-        .from('profiles')
-        .update({ credits: profile.credits - amount })
-        .eq('id', userId)
-    }
-  } else if (updateErr) {
-    throw new Error(`Credit debit failed: ${updateErr.message}`)
+  if (!profile) throw new Error('Profile not found')
+  if (profile.plan !== 'studio' && profile.credits < amount) {
+    throw new Error('Insufficient credits')
   }
 
-  // Record transaction
+  if (profile.plan !== 'studio') {
+    await supabase
+      .from('profiles')
+      .update({ credits: profile.credits - amount })
+      .eq('id', userId)
+  }
+
   await supabase.from('credit_transactions').insert({
     user_id: userId,
     amount: -amount,

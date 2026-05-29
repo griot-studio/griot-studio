@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
-import type { PlanId } from '@/lib/credits'
+import type { PlanId } from '@/lib/plans'
 
 interface CheckoutButtonProps {
   plan: PlanId

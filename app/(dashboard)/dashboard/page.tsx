@@ -4,8 +4,8 @@ import { redirect } from 'next/navigation'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AFRICAN_STYLES } from '@/lib/styles'
-import { PLANS } from '@/lib/credits'
-import type { PlanId } from '@/lib/credits'
+import { PLANS } from '@/lib/plans'
+import type { PlanId } from '@/lib/plans'
 
 export default async function DashboardPage() {
   const supabase = await createClient()

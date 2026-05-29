@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { CreditsBadge } from '@/components/shared/CreditsBadge'
 import { PlanBadge } from '@/components/shared/PlanBadge'
 import { Button } from '@/components/ui/button'
-import type { PlanId } from '@/lib/credits'
+import type { PlanId } from '@/lib/plans'
 
 interface TopbarProps {
   email: string
