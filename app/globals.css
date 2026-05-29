@@ -1,27 +1,61 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    /* Griot Studio — dark by default */
+    --background: #080806;
+    --foreground: #F0EDE6;
+    --card: #13110D;
+    --card-foreground: #F0EDE6;
+    --popover: #13110D;
+    --popover-foreground: #F0EDE6;
+    --primary: #C9A84C;
+    --primary-foreground: #080806;
+    --secondary: #1C1A14;
+    --secondary-foreground: #F0EDE6;
+    --muted: #1C1A14;
+    --muted-foreground: #A8A398;
+    --accent: #C9A84C;
+    --accent-foreground: #080806;
+    --destructive: #DC4C4C;
+    --border: rgba(240, 237, 230, 0.10);
+    --input: rgba(240, 237, 230, 0.08);
+    --ring: #C9A84C;
+    --radius: 0.625rem;
+    --sidebar: #0F0E0A;
+    --sidebar-foreground: #F0EDE6;
+    --sidebar-primary: #C9A84C;
+    --sidebar-primary-foreground: #080806;
+    --sidebar-accent: #1C1A14;
+    --sidebar-accent-foreground: #F0EDE6;
+    --sidebar-border: rgba(240, 237, 230, 0.08);
+    --sidebar-ring: #C9A84C;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-syne), system-ui, sans-serif;
+    letter-spacing: -0.01em;
   }
 }
