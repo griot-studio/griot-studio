@@ -1,10 +1,19 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy singleton — not instantiated at module/build time
+let _resend: Resend | null = null
+
+function getResend(): Resend {
+  if (!_resend) {
+    _resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return _resend
+}
+
 const FROM = 'Griot Studio <noreply@griotstudio.com>'
 
 export async function sendWelcomeEmail(to: string, name?: string) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: 'Bienvenue sur Griot Studio ✦',
@@ -34,7 +43,7 @@ export async function sendSubscriptionConfirmEmail(
   plan: string,
   credits: number | string,
 ) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: `Plan ${plan} activé — Griot Studio`,
@@ -58,7 +67,7 @@ export async function sendSubscriptionConfirmEmail(
 }
 
 export async function sendCancellationEmail(to: string, cancelAt: string) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: 'Abonnement annulé — Griot Studio',

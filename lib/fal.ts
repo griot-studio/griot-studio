@@ -1,6 +1,14 @@
 import * as fal from '@fal-ai/serverless-client'
 
-fal.config({ credentials: process.env.FAL_KEY })
+// Configure lazily on first use — not at module load time
+let _configured = false
+
+function ensureConfigured() {
+  if (!_configured) {
+    fal.config({ credentials: process.env.FAL_KEY })
+    _configured = true
+  }
+}
 
 export interface FalImageResult {
   images: Array<{ url: string; width: number; height: number }>
@@ -31,6 +39,7 @@ export interface GenerateVideoOptions {
 export async function generateImages(
   options: GenerateImageOptions,
 ): Promise<FalImageResult> {
+  ensureConfigured()
   const { prompt, imageSize = 'square_hd', numImages = 4, seed } = options
 
   const result = await fal.run('fal-ai/flux/dev', {
@@ -53,6 +62,7 @@ export async function generateImages(
 export async function generateVideo(
   options: GenerateVideoOptions,
 ): Promise<FalVideoResult> {
+  ensureConfigured()
   const { prompt, duration = 5 } = options
 
   const result = await fal.run('fal-ai/kling-video/v1/standard/text-to-video', {
