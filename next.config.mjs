@@ -31,8 +31,15 @@ const nextConfig = {
     ]
   },
 
-  // Silence the noisy fal.ai deprecation warning in logs
-  serverExternalPackages: [],
+  // Exclude heavy server SDKs from webpack bundling — loaded at runtime via Node require()
+  // This prevents build-time crashes when env vars are missing.
+  serverExternalPackages: [
+    'stripe',
+    '@anthropic-ai/sdk',
+    '@fal-ai/serverless-client',
+    '@aws-sdk/client-s3',
+    'resend',
+  ],
 }
 
 export default nextConfig

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { getStripe, getPlanFromPriceId, getCreditsForPlan } from '@/lib/stripe'
 import { sendSubscriptionConfirmEmail, sendCancellationEmail } from '@/lib/resend'
 import { createClient } from '@supabase/supabase-js'
