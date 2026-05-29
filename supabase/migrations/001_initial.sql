@@ -1,5 +1,5 @@
 -- ── USERS (extend auth.users) ──────────────────────────────
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id            UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   username      TEXT UNIQUE,
   full_name     TEXT,
@@ -12,7 +12,7 @@ CREATE TABLE public.profiles (
 );
 
 -- ── GENERATIONS ─────────────────────────────────────────────
-CREATE TABLE public.generations (
+CREATE TABLE IF NOT EXISTS public.generations (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   prompt_fr     TEXT NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE public.generations (
 );
 
 -- ── MEDIA (images/vidéos générées) ──────────────────────────
-CREATE TABLE public.media (
+CREATE TABLE IF NOT EXISTS public.media (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   generation_id UUID REFERENCES public.generations(id) ON DELETE SET NULL,
@@ -45,7 +45,7 @@ CREATE TABLE public.media (
 );
 
 -- ── SUBSCRIPTIONS ────────────────────────────────────────────
-CREATE TABLE public.subscriptions (
+CREATE TABLE IF NOT EXISTS public.subscriptions (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id             UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   stripe_sub_id       TEXT UNIQUE NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE public.subscriptions (
 );
 
 -- ── CREDIT TRANSACTIONS ──────────────────────────────────────
-CREATE TABLE public.credit_transactions (
+CREATE TABLE IF NOT EXISTS public.credit_transactions (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   amount      INTEGER NOT NULL,
@@ -71,12 +71,12 @@ CREATE TABLE public.credit_transactions (
 );
 
 -- ── INDEXES ──────────────────────────────────────────────────
-CREATE INDEX idx_generations_user_id ON public.generations(user_id);
-CREATE INDEX idx_generations_created_at ON public.generations(created_at DESC);
-CREATE INDEX idx_media_user_id ON public.media(user_id);
-CREATE INDEX idx_media_created_at ON public.media(created_at DESC);
-CREATE INDEX idx_media_is_favorite ON public.media(user_id, is_favorite) WHERE is_favorite = TRUE;
-CREATE INDEX idx_credit_tx_user_id ON public.credit_transactions(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_generations_user_id ON public.generations(user_id);
+CREATE INDEX IF NOT EXISTS idx_generations_created_at ON public.generations(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_media_user_id ON public.media(user_id);
+CREATE INDEX IF NOT EXISTS idx_media_created_at ON public.media(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_media_is_favorite ON public.media(user_id, is_favorite) WHERE is_favorite = TRUE;
+CREATE INDEX IF NOT EXISTS idx_credit_tx_user_id ON public.credit_transactions(user_id, created_at DESC);
 
 -- ── RLS POLICIES ─────────────────────────────────────────────
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -85,21 +85,27 @@ ALTER TABLE public.media ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.credit_transactions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
 CREATE POLICY "Users can view own profile"
   ON public.profiles FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can view own generations" ON public.generations;
 CREATE POLICY "Users can view own generations"
   ON public.generations FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage own media" ON public.media;
 CREATE POLICY "Users can manage own media"
   ON public.media FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own subscriptions" ON public.subscriptions;
 CREATE POLICY "Users can view own subscriptions"
   ON public.subscriptions FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own transactions" ON public.credit_transactions;
 CREATE POLICY "Users can view own transactions"
   ON public.credit_transactions FOR SELECT USING (auth.uid() = user_id);
 
@@ -114,6 +120,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -127,14 +134,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS profiles_touch_updated_at ON public.profiles;
 CREATE TRIGGER profiles_touch_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
+DROP TRIGGER IF EXISTS generations_touch_updated_at ON public.generations;
 CREATE TRIGGER generations_touch_updated_at
   BEFORE UPDATE ON public.generations
   FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
+DROP TRIGGER IF EXISTS subscriptions_touch_updated_at ON public.subscriptions;
 CREATE TRIGGER subscriptions_touch_updated_at
   BEFORE UPDATE ON public.subscriptions
   FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
