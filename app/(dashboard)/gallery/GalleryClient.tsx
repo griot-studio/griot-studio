@@ -16,12 +16,31 @@ type Filter = 'all' | 'image' | 'video' | 'favorite'
 export function GalleryClient({ initialMedia }: GalleryClientProps) {
   const [filter, setFilter] = useState<Filter>('all')
   const [downloading, setDownloading] = useState<string | null>(null)
+  const [favorites, setFavorites] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(initialMedia.map((m) => [m.id, m.is_favorite]))
+  )
+  const [togglingFav, setTogglingFav] = useState<string | null>(null)
 
   const filtered = initialMedia.filter((m) => {
     if (filter === 'all') return true
-    if (filter === 'favorite') return m.is_favorite
+    if (filter === 'favorite') return favorites[m.id]
     return m.type === filter
   })
+
+  const handleFavorite = async (id: string) => {
+    // Optimistic update
+    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }))
+    setTogglingFav(id)
+    try {
+      const res = await fetch(`/api/media/${id}/favorite`, { method: 'PATCH' })
+      if (!res.ok) {
+        // Revert on error
+        setFavorites((prev) => ({ ...prev, [id]: !prev[id] }))
+      }
+    } finally {
+      setTogglingFav(null)
+    }
+  }
 
   const handleDownload = async (url: string, id: string) => {
     setDownloading(id)
@@ -147,10 +166,18 @@ export function GalleryClient({ initialMedia }: GalleryClientProps) {
                 </div>
               )}
 
-              {/* Favorite indicator */}
-              {media.is_favorite && (
-                <div className="absolute top-2 right-2 text-griot-gold text-sm">★</div>
-              )}
+              {/* Favorite button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); handleFavorite(media.id) }}
+                disabled={togglingFav === media.id}
+                className={cn(
+                  'absolute top-2 right-2 text-base transition',
+                  favorites[media.id] ? 'text-griot-gold' : 'text-white/30 hover:text-griot-gold',
+                  togglingFav === media.id && 'opacity-50',
+                )}
+              >
+                ★
+              </button>
             </div>
           ))}
         </div>

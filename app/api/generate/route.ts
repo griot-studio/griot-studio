@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { optimizePrompt } from '@/lib/claude'
-import { generateImages } from '@/lib/fal'
+import { generateImages, generateVideo } from '@/lib/fal'
 import { uploadFromUrl, buildMediaKey } from '@/lib/r2'
 import { checkCredits, debitCredits, CREDIT_COSTS } from '@/lib/credits'
 import { AFRICAN_STYLES, type StyleId } from '@/lib/styles'
@@ -99,15 +99,19 @@ export async function POST(request: NextRequest) {
       })
       resultUrls = falResult.images.map((img) => img.url)
     } else {
-      // Video — Phase 4
-      return NextResponse.json({ error: 'Vidéo disponible en Phase 4' }, { status: 501 })
+      // Video via Kling AI
+      const duration = creditCost === CREDIT_COSTS.video_long ? 10 : 5
+      const falResult = await generateVideo({ prompt: promptEn, duration })
+      resultUrls = [falResult.video.url]
     }
 
     // 8. Upload to R2 (or use fal URLs directly in dev)
+    const ext = type === 'video' ? 'mp4' : 'webp'
+    const contentType = type === 'video' ? 'video/mp4' : 'image/webp'
     const mediaRecords = await Promise.all(
       resultUrls.map(async (sourceUrl, index) => {
-        const key = buildMediaKey(user.id, generation.id, index, 'webp')
-        const { publicUrl, r2Key } = await uploadFromUrl(sourceUrl, key, 'image/webp')
+        const key = buildMediaKey(user.id, generation.id, index, ext)
+        const { publicUrl, r2Key } = await uploadFromUrl(sourceUrl, key, contentType)
         return {
           user_id: user.id,
           generation_id: generation.id,

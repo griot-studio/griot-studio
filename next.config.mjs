@@ -1,4 +1,38 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      // fal.ai CDN (generated images)
+      { protocol: 'https', hostname: 'fal.media' },
+      { protocol: 'https', hostname: '*.fal.media' },
+      { protocol: 'https', hostname: 'storage.googleapis.com' },
+      // Cloudflare R2 public bucket
+      { protocol: 'https', hostname: '*.r2.dev' },
+      { protocol: 'https', hostname: '*.cloudflarestorage.com' },
+      // Supabase avatars
+      { protocol: 'https', hostname: '*.supabase.co' },
+    ],
+  },
 
-export default nextConfig;
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ]
+  },
+
+  // Silence the noisy fal.ai deprecation warning in logs
+  serverExternalPackages: [],
+}
+
+export default nextConfig

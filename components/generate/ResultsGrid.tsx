@@ -7,9 +7,10 @@ interface ResultsGridProps {
   urls: string[]
   isLoading: boolean
   promptEn?: string
+  watermark?: boolean
 }
 
-export function ResultsGrid({ urls, isLoading, promptEn }: ResultsGridProps) {
+export function ResultsGrid({ urls, isLoading, promptEn, watermark }: ResultsGridProps) {
   const [downloading, setDownloading] = useState<string | null>(null)
 
   const handleDownload = async (url: string, index: number) => {
@@ -70,6 +71,14 @@ export function ResultsGrid({ urls, isLoading, promptEn }: ResultsGridProps) {
               className="object-cover"
               unoptimized
             />
+            {/* Watermark overlay for free plan */}
+            {watermark && (
+              <div className="absolute inset-0 flex items-end justify-end p-2 pointer-events-none">
+                <span className="text-[10px] font-heading font-bold tracking-widest text-white/25 uppercase select-none">
+                  Griot Studio
+                </span>
+              </div>
+            )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-end justify-center pb-3 opacity-0 group-hover:opacity-100">
               <button
                 onClick={() => handleDownload(url, i)}

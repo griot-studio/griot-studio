@@ -6,7 +6,9 @@ import { StylePicker } from '@/components/generate/StylePicker'
 import { PromptInput } from '@/components/generate/PromptInput'
 import { GenerateButton } from '@/components/generate/GenerateButton'
 import { ResultsGrid } from '@/components/generate/ResultsGrid'
+import { cn } from '@/lib/utils'
 import type { StyleId } from '@/lib/styles'
+import type { MediaType } from '@/types'
 
 interface GeneratePageClientProps {
   credits: number
@@ -14,7 +16,7 @@ interface GeneratePageClientProps {
 }
 
 export function GeneratePageClient({ credits, plan }: GeneratePageClientProps) {
-  const { prompt, styleId, isGenerating, results, error, setPrompt, setStyle, generate } =
+  const { prompt, styleId, type, isGenerating, results, error, setPrompt, setStyle, setType, generate } =
     useGenerate()
 
   const promptEn = useGenerateStore((s) => s.promptEn)
@@ -33,6 +35,36 @@ export function GeneratePageClient({ credits, plan }: GeneratePageClientProps) {
       </div>
 
       <div className="space-y-8">
+        {/* Image / Video toggle */}
+        <div>
+          <label className="block text-sm font-medium text-griot-text-muted mb-3">
+            Type de génération
+          </label>
+          <div className="inline-flex rounded-lg border border-white/10 p-1 bg-griot-surface">
+            {(['image', 'video'] as MediaType[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setType(t)}
+                disabled={isGenerating}
+                className={cn(
+                  'px-4 py-1.5 rounded-md text-sm font-medium transition',
+                  type === t
+                    ? 'bg-griot-gold text-griot-bg'
+                    : 'text-griot-text-muted hover:text-griot-text',
+                )}
+              >
+                {t === 'image' ? '🖼 Image' : '🎬 Vidéo'}
+              </button>
+            ))}
+          </div>
+          {type === 'video' && (
+            <p className="mt-2 text-xs text-griot-text-muted">
+              Vidéo 5s · 5 crédits · Propulsé par Kling AI
+            </p>
+          )}
+        </div>
+
         {/* Style picker */}
         <StylePicker
           value={styleId}
@@ -75,6 +107,7 @@ export function GeneratePageClient({ credits, plan }: GeneratePageClientProps) {
           urls={results}
           isLoading={isGenerating}
           promptEn={promptEn ?? undefined}
+          watermark={plan === 'free'}
         />
       </div>
 
