@@ -1,12 +1,53 @@
-export default function SettingsPage() {
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { SettingsClient } from './SettingsClient'
+import type { PlanId } from '@/lib/credits'
+import type { CreditTransaction } from '@/types'
+
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: { checkout?: string }
+}) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const [{ data: profile }, { data: subscription }, { data: transactions }] =
+    await Promise.all([
+      supabase
+        .from('profiles')
+        .select('full_name, username, plan, credits, stripe_id, avatar_url')
+        .eq('id', user.id)
+        .single(),
+      supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle(),
+      supabase
+        .from('credit_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10),
+    ])
+
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
-      <h1 className="font-heading text-3xl font-bold tracking-tight">
-        Réglages
-      </h1>
-      <p className="text-griot-text-muted mt-1">
-        Phase 3 — billing & profil à venir.
-      </p>
-    </div>
+    <SettingsClient
+      user={{ email: user.email ?? '', id: user.id }}
+      profile={{
+        full_name: profile?.full_name ?? null,
+        username: profile?.username ?? null,
+        plan: (profile?.plan ?? 'free') as PlanId,
+        credits: profile?.credits ?? 0,
+        stripe_id: profile?.stripe_id ?? null,
+        avatar_url: profile?.avatar_url ?? null,
+      }}
+      subscription={subscription ?? null}
+      transactions={(transactions ?? []) as CreditTransaction[]}
+      checkoutStatus={searchParams.checkout}
+    />
   )
 }
