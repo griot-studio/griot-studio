@@ -16,7 +16,7 @@ interface GenerateRequest {
 
 export async function POST(request: NextRequest) {
   // 1. Auth check
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
   if (authError || !user) {

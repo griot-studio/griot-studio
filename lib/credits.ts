@@ -43,7 +43,7 @@ export async function checkCredits(
   userId: string,
   required: number,
 ): Promise<{ ok: boolean; credits: number; required: number }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('profiles')
@@ -77,7 +77,7 @@ export async function debitCredits(
   description: string,
   reference?: string,
 ): Promise<void> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Decrement with a check — won't go below 0
   const { error: updateErr } = await supabase.rpc('debit_credits', {
@@ -127,7 +127,7 @@ export async function grantCredits(
   description: string,
   reference?: string,
 ): Promise<void> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   await supabase
     .from('profiles')

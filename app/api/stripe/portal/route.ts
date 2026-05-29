@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createPortalSession } from '@/lib/stripe'
 
 export async function POST() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
   if (authError || !user) {

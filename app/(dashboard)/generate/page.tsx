@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { GeneratePageClient } from './GeneratePageClient'
 
 export default async function GeneratePage() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')

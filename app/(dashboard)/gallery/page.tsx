@@ -4,7 +4,7 @@ import { GalleryClient } from './GalleryClient'
 import type { Media } from '@/types'
 
 export default async function GalleryPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
